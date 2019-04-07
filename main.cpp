@@ -1,14 +1,13 @@
 #include <iostream>
-#include <string>
+#include <cstring>
 #include <cstdio>
 #include <fstream>
 #include <deque>
 
 using namespace std;
 
-int main(int argc, const char * argv[]) {
+int main() {
     ifstream inFile;
-        
     inFile.open("/Users/mac/Desktop/project/Team_PrOJECT/SHM/Build/Products/Debug/TEXT.txt");
     deque<string> html_tag;
     deque<string> sub_list_tag;
@@ -20,6 +19,8 @@ int main(int argc, const char * argv[]) {
     }else{
         while(!inFile.eof()){
             inFile.getline(inputString, 255);
+            //char* temp = "\n";
+            //strcat(inputString,temp);
             content.push_back(inputString);
             memset(inputString,NULL,255);
         }
@@ -44,6 +45,7 @@ int main(int argc, const char * argv[]) {
                 memset(buf,NULL,255);
                 break;
             }
+            
             if(pStr[j] == '*'||pStr[j] == '#'){
                 if(strlen(buf)>0){
                     html_tag.push_back(buf);
@@ -165,12 +167,136 @@ int main(int argc, const char * argv[]) {
                     return 0;
                 }
             }
+            else if (pStr[j] == '\\'&&(j + 1 < pStr.length())) {
+                if (pStr[j + 1] == '\\') {
+                    if(strcmp(buf,"") != 0){html_tag.push_back(buf);}
+                    memset(buf, NULL, 255);
+                    html_tag.push_back("<br>");
+                    k=0;
+                    j += 1;
+                }
+                else{
+                    cout<<"Error"<<endl;
+                    return 0;
+                }
+            }
+            else if(pStr[j] == ':'){
+                if(strcmp(buf,"") != 0){html_tag.push_back(buf);}
+                memset(buf, NULL, 255);
+                html_tag.push_back("&nbsp;&nbsp;&nbsp;&nbsp;");
+                k=0;
+            }
+            
+
             else{   //리스트의 데이터
                 buf[k++] = pStr[j];
             }
         }
     }
 
+    
+    /*
+    int table_chk = 0;
+    int tr_chk = 0;
+    for (int i = 0; i < (int)content.size(); i++) {
+        int f = 0;
+        
+        if(table_chk == 1){
+            tr_chk = 1;
+            stk.push_back("<tr>");
+        }
+        
+        for (int j = 0; j < (int)pStr.length(); j++) {
+            
+            if (pStr[j] == '{' && j + 1 < pStr.length()) {
+                if (pStr[j + 1] == '&') {
+                    if(strcmp(buf,"") != 0){stk.push_back(buf);}
+                    memset(buf, NULL, 255);
+                    table_chk = 1;
+                    stk.push_back("<table>");
+                    j += 1;
+                    continue;
+                }
+            }
+            if (pStr[j] == '&' && j + 1 < pStr.length()) {
+                if (pStr[j + 1] == '}') {
+                    if(strcmp(buf,"") != 0){stk.push_back(buf);}
+                    memset(buf, NULL, 255);
+                    table_chk = 0;
+                    stk.pop_back();
+                    stk.push_back("</table>");
+                    j += 1;
+                    continue;
+                }
+            }
+            if(table_chk == 1){
+                if(pStr[j] == '/'){
+                    stk.push_back("<th>");
+                    int th_chk = 1;
+                    if(j+1 < (int)pStr.length()){
+                        for (f = j+1 ; f < (int)pStr.length(); f++){
+                            if(pStr[f] != '/'){
+                                buf[k++] = pStr[f];
+                            }
+                            //cout<<"k="<<k<<endl;
+                            //cout<<"f="<<pStr[f]<<endl;
+                            if(pStr[f] == '/'){
+                                if(strcmp(buf,"") != 0){stk.push_back(buf);}
+                                memset(buf, NULL, 255);
+                                stk.push_back("</th>");
+                                th_chk = 0;
+                                k=0;
+                                //cout<<"j의 값"<<j<<endl;
+                                j += f-j-1;
+                                break;
+                            }
+                        }
+                    }
+                    if(th_chk == 1){
+                        stk.pop_back();
+                    }
+                    continue;
+                }
+                if(pStr[j] == '|'){
+                    stk.push_back("<td>");
+                    int th_chk = 1;
+                    if(j+1 < (int)pStr.length()){
+                        for (f = j+1 ; f < (int)pStr.length(); f++){
+                            if(pStr[f] != '|'){
+                                buf[k++] = pStr[f];
+                            }
+                            if(pStr[f] == '|'){
+                                if(strcmp(buf,"") != 0){stk.push_back(buf);}
+                                memset(buf, NULL, 255);
+                                stk.push_back("</td>");
+                                th_chk = 0;
+                                k=0;
+                                //cout<<"j의 값"<<j<<endl;
+                                j += f-j-1;
+                                break;
+                            }
+                        }
+                    }
+                    if(th_chk == 1){
+                        stk.pop_back();
+                    }
+                    continue;
+                }
+            }else{
+                buf[k++] = pStr[j];
+            }
+            if(j == pStr.length()-1){
+                if(strcmp(buf,"") != 0){
+                    stk.push_back(buf);
+                }
+            }
+        }
+        if(table_chk == 1 && tr_chk == 1){
+            stk.push_back("</tr>");
+        }
+    }
+
+    
             /*
                         if(th_chk == 1){
                             char *ptr = strtok(inputString, "/");      // "|" 공백 문자를 기준으로 문자열을 자름, 포인터 반환
@@ -214,6 +340,7 @@ int main(int argc, const char * argv[]) {
     }
 */
     //==============
+    
     
     ofstream outFile;
     
