@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <vector>
 #include <cstdio>
 #include <fstream>
 #include <deque>
@@ -11,12 +10,13 @@ int main(int argc, const char * argv[]) {
     ifstream inFile;
         
     inFile.open("/Users/mac/Desktop/project/Team_PrOJECT/SHM/Build/Products/Debug/TEXT.txt");
-    deque<string> stk;
+    deque<string> html_tag;
+    deque<string> sub_list_tag;
     deque<string> content;
     char inputString[255];
     
     if(inFile.is_open() == false){
-            cout<<"파일이 없습니다"<<endl;
+            cout<<"Error : file not found"<<endl;
     }else{
         while(!inFile.eof()){
             inFile.getline(inputString, 255);
@@ -25,78 +25,186 @@ int main(int argc, const char * argv[]) {
         }
         inFile.close();
     }
+    
     //=====LIST=====
     
-    int astr_flag = 0;
-    int sharp_flag = 0;
+    int total_word_count = 0;
     char buf[255];
-    //cout<<content.size()<<endl;
     
     for(int i = 0; i<content.size(); i++){
-        
         string pStr = content[i];
+        int list_word_count = 0;
         int k = 0;
-        int astrcount = 0;
-        int sharpcount = 0;
-        
+        string sharp_star="";
         for(int j = 0; j<=pStr.length(); j++){
-            astrcount = 0;
+            list_word_count = 0;
             if(j == pStr.length()&&strlen(buf)>0){
-                stk.push_back(buf);
-                stk.push_back("</li>\n");
+                html_tag.push_back(buf);
+                html_tag.push_back("</li>\n");
                 memset(buf,NULL,255);
                 break;
             }
-            if(pStr[j] == '*'){
+            if(pStr[j] == '*'||pStr[j] == '#'){
                 if(strlen(buf)>0){
-                    stk.push_back(buf);
+                    html_tag.push_back(buf);
                     memset(buf,NULL,255);
                 }
-                do{
-                    //counting the number of astrs
-                    astrcount++;
+                while(j<pStr.length() && (pStr[j] == '*'||pStr[j] == '#')){
+                    //counting the number of astrs,sharps
+                    list_word_count++;
                     j++;
-                }while(j<pStr.length() && pStr[j] == '*');
-                j--;
-                
-                if(astrcount > astr_flag){   //overlapped
-                    astr_flag++;
-                    stk.push_back("<ul>\n");
-                    stk.push_back("<li>");
                 }
-                else if(astrcount < astr_flag){  //return
-                    stk.push_back("</ul>\n");
-                    stk.push_back("<li>");
-                    astr_flag--;
+                j--;
+                if(pStr[j] == '*')
+                    sharp_star = "<ul>\n";
+                else if(pStr[j] == '#')
+                    sharp_star = "<ol>\n";
+                
+                if(list_word_count > total_word_count){   //overlapped
+                    total_word_count++;
+                    html_tag.push_back(sharp_star);
+                    html_tag.push_back("<li>");
+                    sharp_star.insert(1,"/");
+                    sub_list_tag.push_back(sharp_star);
+                }
+                else if(list_word_count < total_word_count){  //return
+                    html_tag.push_back(sub_list_tag.back());
+                    sub_list_tag.pop_back();
+                    html_tag.push_back("<li>");
+                    total_word_count--;
                 }
                 else{   //each row has same astr counts
-                    stk.push_back("<li>");
+                    html_tag.push_back("<li>");
                 }
             }
-            else if(pStr[j] =='#'){
-                if(strlen(buf)>0){
-                    stk.push_back(buf);
-                    memset(buf,NULL,255);
+            /*
+            else if(pStr[j] == '{' && j+1 < pStr.length()){
+                if(pStr[j+1] == '&'){
+                    html_tag.push_back("<table>");
+                    while(!(pStr[j] == '&' && j+1 < pStr.length())){
+                        if(pStr[j+1] == '}'){
+                            html_tag.push_back("</table>");
+                            break;
+                        }
+                        if(j > pStr.length()){
+                            cout<<"Error"<<endl;
+                            return 0;
+                        }
+                        
+                    }
                 }
-                do{
-                    //counting the number of sharps
-                    sharpcount++;
-                    j++;
-                }while(j<pStr.length() && pStr[j] == '#');
-                j--;
-                
-                if(sharpcount > sharp_flag){   //overlapped
-                    sharp_flag++;
-                    stk.push_back("<ol>\n");
-                    stk.push_back("<li>");
+                else{
+                    cout<<"Error"<<endl;
+                    return 0;
                 }
-                else if(sharpcount < sharp_flag){  //return
-                    stk.push_back("</ol>\n");
-                    stk.push_back("<li>");
-                    sharp_flag--;
+            }*/
+            
+            else if (pStr[j] == '{' &&(j + 2 < pStr.length())) {
+                if (pStr[j + 1] == '!' &&pStr[j + 2] == '!') {
+                    if(strcmp(buf,"") != 0){html_tag.push_back(buf);}
+                    memset(buf, NULL, 255);
+                    html_tag.push_back("<b>");
+                    k=0; //buffer index init
+                    j += 2;
                 }
-                else{   //each row has same sharp counts
-                    stk.push_back("<li>");
+                else if (pStr[j + 1] == '_' &&pStr[j + 2] == '_') {
+                    if(strcmp(buf,"") != 0){html_tag.push_back(buf);}
+                    memset(buf, NULL, 255);
+                    html_tag.push_back("<u>");
+                    k=0;
+                    j += 2;
+                }
+                else if (pStr[j + 1] == '/' && pStr[j + 2] == '/') {
+                    if(strcmp(buf,"") != 0){html_tag.push_back(buf);}
+                    memset(buf, NULL, 255);
+                    html_tag.push_back("<i>");
+                    k=0;
+                    j += 2;
+                }
+                else{
+                    cout<<"Error"<<endl;
+                    return 0;
+                }
+            }
+            else if (pStr[j] == '!' &&(j + 2 < pStr.length())) {
+                if (pStr[j + 1] == '!' && pStr[j + 2] == '}') {
+                    if(strcmp(buf,"") != 0){html_tag.push_back(buf);}
+                    memset(buf, NULL, 255);
+                    html_tag.push_back("</b>");
+                    k=0;
+                    j += 2;
+                }
+                else{
+                    cout<<"Error"<<endl;
+                    return 0;
+                }
+            }
+            else if (pStr[j] == '_'&&(j + 2 < pStr.length())) {
+                if (pStr[j + 1] == '_'&&pStr[j + 2] == '}') {
+                    if(strcmp(buf,"") != 0){html_tag.push_back(buf);}
+                    memset(buf, NULL, 255);
+                    html_tag.push_back("</u>");
+                    k=0;
+                    j += 2;
+                }
+                else{
+                    cout<<"Error"<<endl;
+                    return 0;
+                }
+            }
+            else if (pStr[j] == '/'&&(j + 2 < pStr.length())) {
+                if (pStr[j + 1] == '/'&&pStr[j + 2] == '}') {
+                    if(strcmp(buf,"") != 0){html_tag.push_back(buf);}
+                    memset(buf, NULL, 255);
+                    html_tag.push_back("</i>");
+                    k=0;
+                    j += 2;
+                }
+                else{
+                    cout<<"Error"<<endl;
+                    return 0;
+                }
+            }
+            else{   //리스트의 데이터
+                buf[k++] = pStr[j];
+            }
+        }
+    }
+
+            /*
+                        if(th_chk == 1){
+                            char *ptr = strtok(inputString, "/");      // "|" 공백 문자를 기준으로 문자열을 자름, 포인터 반환
+                            html_tag.push_back("<tr>");
+                            while (ptr != NULL)               // 자른 문자열이 나오지 않을 때까지 반복
+                            {
+                                ptr = strtok(NULL, "/");      // 다음 문자열을 잘라서 포인터를 반환
+                                html_tag.push_back("<th>");
+                                if(ptr != NULL){
+                                    html_tag.push_back(string(ptr));
+                                }
+                                html_tag.push_back("</th>");
+                            }
+                            html_tag.pop_back();
+                            html_tag.pop_back();
+                            html_tag.push_back("</tr>");
+                        
+                        if(td_chk == 1){
+                            char *ptr1 = strtok(inputString, "|");      // "|" 공백 문자를 기준으로 문자열을 자름, 포인터 반환
+                            html_tag.push_back("<tr>");
+                            while (ptr1 != NULL)               // 자른 문자열이 나오지 않을 때까지 반복
+                            {
+                                ptr1 = strtok(NULL, "|");      // 다음 문자열을 잘라서 포인터를 반환
+                                html_tag.push_back("<td>");
+                                if(ptr1 != NULL){
+                                    html_tag.push_back(string(ptr1));
+                                }
+                                html_tag.push_back("</td>");
+                            }
+                            html_tag.pop_back();
+                            html_tag.pop_back();
+                            html_tag.push_back("</tr>");
+                        }
+                    }
                 }
             }
             else{
@@ -104,15 +212,26 @@ int main(int argc, const char * argv[]) {
             }
         }
     }
-    while(astr_flag>0){
-        stk.push_back("</ul>\n");
-        astr_flag--;
-    }
-    //cout<<stk.size()<<endl;
-    int size = (int)stk.size();
-    for(int i = 0; i<size;i++){
-        cout<<stk.front();
-        stk.pop_front();
-    }
+*/
     //==============
+    
+    ofstream outFile;
+    
+    outFile.open("/Users/mac/Desktop/project/Team_PrOJECT/SHM/Build/Products/Debug/result.html");
+    if(outFile.is_open()){
+        int size = (int)html_tag.size();
+        for(int i = 0; i<size;i++){
+            outFile<<html_tag.front();
+            html_tag.pop_front();
+        }
+        size = (int)sub_list_tag.size();
+        for(int i = 0; i<size;i++){
+            outFile<<sub_list_tag.back();
+            sub_list_tag.pop_back();
+        }
+    }
+    else{
+        cout<<"file not created"<<endl;
+    }
 }
+
